@@ -74,6 +74,7 @@ class VDX:
         # get valid prompt
         self.prompt = s.decode('utf-8').splitlines()[-1]
         self.log.debug("Prompt = '{}'".format(self.prompt))
+        self.exec_command("terminal length 0")
 
     def close(self):
         """
@@ -96,7 +97,7 @@ class VDX:
 
         :param string: string you want to write
         """
-        self.device.write(string.encode('utf-8') + b"\n")
+        self.device.write(string.encode('utf-8'))
 
     def _read_until_prompt_after_command(self):
         """
@@ -138,6 +139,9 @@ class VDX:
             raise
         return result
 
+    def get_config(self, format='native'):
+        return self.exec_command("show runnging-config")
+
 
 def parse_arguments():
     parser = ArgumentParser()
@@ -157,7 +161,8 @@ def main(hostname, username, password, timeout, loglevel, command):
               password=password, timeout=timeout, loglevel=loglevel)
     with vdx:
         result = vdx.exec_command(command)
-        vdx.log.info(result)
+        print(result)
+
 
 if __name__ == "__main__":
     args = parse_arguments()
