@@ -9,18 +9,22 @@ logging.basicConfig(format=FORMAT)
 
 
 class VDX:
-    def __init__(self, hostname, username, password, loglevel="INFO",
-                 telnetdebug=0):
+    def __init__(self, hostname, username, password, timeout=10,
+                 loglevel="INFO", telnetdebug=0):
         """
         Represents deveice running VDX.
 
         :param hostname: IP or FQDN of the device you want to connect to
         :param username: Username
         :param password: Password
+        :param timeout: telnet connection timeout
+        :param loglevel: logging level
+        :param telnetdebug: output telnet debug information level
         """
         self.hostname = hostname
         self.username = username
         self.password = password
+        self.timeout = int(timeout)
         # config states
         self.running_config = None
         self.candidate_config = None
@@ -35,7 +39,7 @@ class VDX:
         else:
             self.log.setLevel(logging.ERROR)
         # console prompt
-        self.prompt = "# "
+        self.prompt = '# '
 
     def __getattr__(self, item):
         def wrapper(*args, **kwargs):
@@ -55,7 +59,8 @@ class VDX:
                        hostname=self.hostname, username=self.username,
                        password=self.password))
         # connection
-        self.device = telnetlib.Telnet(host=self.hostname, timeout=10)
+        self.device = telnetlib.Telnet(host=self.hostname,
+                                       timeout=self.timeout)
         # set debuglevel
         self.device.set_debuglevel(self.telnetdebug)
         # login steps
@@ -84,9 +89,58 @@ class VDX:
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
 
+    def _write(self, string):
+        """
+        Write string to connection
+
+        :param string: string you want to write
+        """
+        self.device.write(string.encode('utf-8') + b"\n")
+
+    def _read_until_prompt_after_command(self):
+        """
+        Read strings until prompt
+
+        Skip first (it must be command) and last line (it must be prompt).
+        """
+        return (
+            "\n".join(
+                self._read_until_string(self.prompt).splitlines()[1:-1]
+            )
+        )
+
+    def _read_until_string(self, string):
+        """
+        Read strings until given string apper
+
+        :param string: string you want to stop to read from connection
+        """
+        return self.device.read_until(string.encode('utf-8')).decode('utf-8')
+
+    def read_result(self):
+        return self._read_until_prompt_after_command()
+
+    def exec_command(self, command):
+        """
+        This method will run given commands list.
+
+        :param commands: List of commands you want to run
+        :param format: format you want to get; 'native' is no format conversion
+        :param timestamps: This will return when each command \
+            was executed and how log it took
+        """
+        try:
+            self._write(command.strip() + "\n")
+            result = self.read_result()
+        except:
+            self.log.error("Unexpected error: {}", command)
+            raise
+        return result
+
 
 def main():
     pass
+
 
 if __name__ == "__main__":
     main()
