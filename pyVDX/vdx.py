@@ -1,5 +1,6 @@
 import telnetlib
 import logging
+from argparse import ArgumentParser
 
 
 # Set log format
@@ -138,9 +139,28 @@ class VDX:
         return result
 
 
-def main():
-    pass
+def parse_arguments():
+    parser = ArgumentParser()
+    parser.add_argument("--hostname", required=True)
+    parser.add_argument("-u", "--username", required=True)
+    parser.add_argument("-p", "--password", required=True)
+    parser.add_argument("--timeout", required=False, type=int, default=10)
+    parser.add_argument("--loglevel", required=False, default="INFO")
+    args = parser.parse_args()
+    return args
 
+
+def main(hostname, username, password, timeout, loglevel):
+    vdx = VDX(hostname=hostname, username=username,
+              password=password, timeout=timeout, loglevel=loglevel)
+    with vdx:
+        result = vdx.exec_command("show ip route all")
+        vdx.log.info(result)
 
 if __name__ == "__main__":
-    main()
+    args = parse_arguments()
+    main(hostname=args.hostname,
+         username=args.username,
+         password=args.password,
+         timeout=args.timeout,
+         loglevel=args.loglevel)
