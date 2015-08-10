@@ -141,20 +141,22 @@ class VDX:
 
 def parse_arguments():
     parser = ArgumentParser()
+    # global options
     parser.add_argument("--hostname", required=True)
     parser.add_argument("-u", "--username", required=True)
     parser.add_argument("-p", "--password", required=True)
     parser.add_argument("--timeout", required=False, type=int, default=10)
     parser.add_argument("--loglevel", required=False, default="INFO")
+    parser.add_argument("command", default="show version", nargs='*')
     args = parser.parse_args()
     return args
 
 
-def main(hostname, username, password, timeout, loglevel):
+def main(hostname, username, password, timeout, loglevel, command):
     vdx = VDX(hostname=hostname, username=username,
               password=password, timeout=timeout, loglevel=loglevel)
     with vdx:
-        result = vdx.exec_command("show ip route all")
+        result = vdx.exec_command(command)
         vdx.log.info(result)
 
 if __name__ == "__main__":
@@ -163,4 +165,5 @@ if __name__ == "__main__":
          username=args.username,
          password=args.password,
          timeout=args.timeout,
-         loglevel=args.loglevel)
+         loglevel=args.loglevel,
+         command=" ".join(args.command))
