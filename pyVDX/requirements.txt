@@ -1,0 +1,7 @@
+flake8==2.4.1
+mccabe==0.3.1
+parsimonious==0.6.2
+pep8==1.5.7
+pyflake8==0.1.9
+pyflakes==0.9.2
+virtualenv==13.1.0
