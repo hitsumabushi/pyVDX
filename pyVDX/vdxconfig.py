@@ -1,8 +1,7 @@
 from parsimonious.grammar import Grammar
 from collections import OrderedDict
 
-conf = """
-no support autoupload enable
+conf = """no support autoupload enable
 interfae Vlan 1
 !
 diag read interface-id 1
@@ -31,27 +30,30 @@ fcoe
 
 
 class VdxConfig(object):
+    """
+    Vdx Config parser
+    """
     def __init__(self, revision_id):
-        """
-        items = ("\\n"* item (newline item)* "\\n"*)
-        item = ((block / line))
-
-        block = (indent* text (newline item)* newline indent* block_close)
-        line = (indent* text)
-
-        text = (token (space token)*)
-        block_close = "!"
-        indent = ~r" +"
-        newline = "\\n"
-        space = ~r" +"
-        token = ~r"[a-zA-Z0-9/:-].+"
-        number = ~r"[0-9]+"
-        """
         self.revision_id = revision_id
         self.config = OrderedDict()
+        self.__grammer__ = (r"""
+                items = (~r"\n"* item (newline item)* "\n"*)
+                item = (block / line)
+
+                block = (indent* text (newline item)* newline indent* block_close)
+                line = (indent* text)
+
+                text = (token (space token)*)
+                block_close = "!"
+                indent = ~r" +"
+                newline = "\n"
+                space = ~r" +"
+                token = ~r"[a-zA-Z0-9/:-].+"
+                number = ~r"[0-9]+"
+        """)
 
     def parse(self, string):
-        return Grammar(self.__init__.__doc__).parse(string)
+        return Grammar(self.__grammer__).parse(string)
 
     def loads(self, node):
         if isinstance(node, str):
